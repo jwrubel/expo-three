@@ -1,3 +1,5 @@
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer';
 import { uriAsync } from 'expo-asset-utils';
 import resolveAsset, { stringFromAsset } from './resolveAsset';
 import { ProgressCallback } from './loading.types';
@@ -66,7 +68,11 @@ export default async function loadAsync(
         onAssetRequested,
       });
     } else if (url.match(/\.fbx$/i)) {
-      const arrayBuffer = await loadArrayBufferAsync({ uri: url, onProgress });
+      // changed based on https://github.com/expo/expo-three/issues/151#issuecomment-593267436
+      const base64 = await FileSystem.readAsStringAsync(url, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const arrayBuffer = decode(base64);
       const FBXLoader = loaderClassForExtension('fbx');
       const loader = new FBXLoader();
       return loader.parse(arrayBuffer, onAssetRequested);
